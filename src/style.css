@@ -1,0 +1,150 @@
+:root {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #111;
+  background: #fff;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+#app {
+  padding: 32px;
+}
+
+h1 {
+  margin: 0 0 30px;
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+
+.timeline-scroll {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.timeline-scroll:focus-visible {
+  outline: 1px solid #111;
+  outline-offset: 4px;
+}
+
+.timeline {
+  min-width: 1220px;
+}
+
+.timeline-header,
+.person-row {
+  display: grid;
+  grid-template-columns: 170px minmax(1050px, 1fr);
+}
+
+.timeline-header {
+  height: 30px;
+}
+
+.header-gutter,
+.person-name {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: #fff;
+  border-right: 1px solid #d9d9d9;
+}
+
+.years,
+.track {
+  position: relative;
+}
+
+.year-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #ececec;
+}
+
+.year-label {
+  width: auto;
+  background: none;
+  color: #666;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  transform: translateX(7px);
+}
+
+.person-row {
+  min-height: calc(38px + (var(--lanes) - 1) * 21px);
+  border-top: 1px solid #e7e7e7;
+}
+
+.person-row:last-child {
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.person-name {
+  display: flex;
+  align-items: center;
+  padding-right: 18px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.track {
+  min-height: inherit;
+}
+
+.role {
+  position: absolute;
+  top: calc(10px + var(--lane) * 21px);
+  left: var(--start);
+  width: var(--span);
+  height: 18px;
+  overflow: hidden;
+  padding: 2px 6px;
+  color: #fff;
+  background: var(--color);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  white-space: nowrap;
+  text-overflow: clip;
+}
+
+.role-compact {
+  padding-right: 3px;
+  padding-left: 3px;
+  font-size: 10px;
+}
+
+@media (max-width: 640px) {
+  #app {
+    padding: 22px 16px;
+  }
+
+  h1 {
+    margin-bottom: 24px;
+  }
+
+  .timeline {
+    min-width: 1150px;
+  }
+
+  .timeline-header,
+  .person-row {
+    grid-template-columns: 148px minmax(1002px, 1fr);
+  }
+
+  .person-name {
+    padding-right: 12px;
+    font-size: 12px;
+  }
+}
