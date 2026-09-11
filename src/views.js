@@ -2,8 +2,9 @@ import { people, timelineEnd } from "./data.js";
 
 export const siteName = "Where are they now?";
 export const siteUrl = "https://elh.github.io/watn/";
-export const updatedAt = "2026-08-28";
-export const updatedLabel = "August 28, 2026";
+export const updatedAt = "2026-09-10";
+export const updatedLabel = "September 10, 2026";
+export const previewVersion = `${updatedAt}-cohort-windows`;
 
 export const cohorts = [
   [
@@ -145,7 +146,7 @@ export function viewMetadata(filters = emptyFilters) {
     title: filtered ? `${viewHeading(filters)} — ${siteName}` : siteName,
     description: `${filtered ? `${viewHeading(filters)}. ` : "Explore AI leaders’ career timelines. "}${count} ${count === 1 ? "person" : "people"} tracked across AI labs, companies, and universities. Updated ${updatedLabel}.`,
     url: new URL(cohortPath(filters.cohort), siteUrl).href,
-    image: new URL(`og/${imageCohort}.png`, siteUrl).href,
+    image: new URL(`og/${imageCohort}.png?v=${previewVersion}`, siteUrl).href,
     imageAlt: `Career timeline preview: ${cohortById.get(imageCohort).label}`,
   };
 }

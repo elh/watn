@@ -6,6 +6,7 @@ import {
   matchesFilters,
   readFilters,
   siteUrl,
+  previewVersion,
   viewHeading,
   viewMetadata,
   viewUrl,
@@ -81,7 +82,7 @@ describe("shareable views", () => {
       const metadata = viewMetadata({ ...emptyFilters, cohort: id });
       expect(metadata.title).toBe(`${label} — Where are they now?`);
       expect(metadata.url).toBe(`${siteUrl}cohorts/${id}/`);
-      expect(metadata.image).toBe(`${siteUrl}og/${id}.png`);
+      expect(metadata.image).toBe(`${siteUrl}og/${id}.png?v=${previewVersion}`);
     }
   });
 });

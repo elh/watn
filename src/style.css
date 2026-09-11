@@ -82,14 +82,6 @@ h1 {
   font-size: 11px;
   line-height: 1.5;
 }
-.page-meta a {
-  color: inherit;
-  text-underline-offset: 3px;
-  text-decoration-color: #555b61;
-}
-.page-meta a:hover {
-  color: #f2f2ef;
-}
 .view-summary {
   display: flex;
   align-items: baseline;
@@ -280,9 +272,12 @@ h1 {
   margin-bottom: 7px;
   color: #929ba3;
   font-size: 11px;
+  flex-wrap: wrap;
 }
-.jump-latest {
+.jump-latest,
+.reset-zoom {
   font-size: 11px;
+  white-space: nowrap;
 }
 .jump-latest:disabled {
   color: #929ba3;
@@ -292,15 +287,19 @@ h1 {
   overflow-x: auto;
   scrollbar-color: #565e65 #17191b;
   scrollbar-width: thin;
+  touch-action: pan-x pan-y;
+  overscroll-behavior-x: contain;
+  overflow-anchor: none;
 }
 .timeline {
+  --overview-width: 1120px;
   width: 100%;
-  min-width: 1120px;
+  min-width: var(--overview-width);
 }
 .timeline-header,
 .person-row {
   display: grid;
-  grid-template-columns: 224px minmax(896px, 1fr);
+  grid-template-columns: 224px minmax(0, 1fr);
 }
 .timeline-header {
   height: 28px;
@@ -316,6 +315,15 @@ h1 {
 .years,
 .track {
   position: relative;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.timeline-scroll.is-panning,
+.timeline-scroll.is-panning * {
+  cursor: grabbing;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .year-tick {
   position: absolute;
@@ -324,13 +332,24 @@ h1 {
   width: 1px;
   background: #212427;
 }
-.year-label {
+.year-label,
+.month-label {
   width: auto;
   background: none;
   color: #969fa6;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
   transform: translateX(7px);
+}
+.month-label {
+  display: none;
+  position: absolute;
+  top: 0;
+  color: #737d85;
+}
+.timeline[data-detail="quarters"] .quarter-label,
+.timeline[data-detail="months"] .month-label {
+  display: block;
 }
 .person-row {
   min-height: calc(50px + (var(--lanes) - 1) * 22px);
@@ -493,9 +512,6 @@ h1 {
     justify-content: space-between;
     gap: 12px;
   }
-  .github-separator {
-    display: none;
-  }
   .view-summary {
     column-gap: 5px;
   }
@@ -518,7 +534,7 @@ h1 {
     min-height: 38px;
   }
   .timeline {
-    min-width: 1080px;
+    --overview-width: 1080px;
   }
   .timeline-header {
     display: block;

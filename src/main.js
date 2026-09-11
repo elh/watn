@@ -1,4 +1,6 @@
 import "./style.css";
+import { setupTimelineNavigation } from "./timeline-navigation.js";
+import { monthNumber, readTimeRange, timeRangeUrl } from "./timeline-range.js";
 import { people, companyColors, timelineStart, timelineEnd } from "./data.js";
 import {
   cohorts,
@@ -14,11 +16,6 @@ import {
   viewMetadata,
   viewUrl,
 } from "./views.js";
-
-function monthNumber(date) {
-  const [year, month] = date.split("-").map(Number);
-  return year * 12 + month - 1;
-}
 
 function formatMonth(date) {
   return new Intl.DateTimeFormat("en", {
@@ -52,6 +49,17 @@ function tickMarkup(labels = false) {
     )
     .join("");
 }
+
+const monthTicks = Array.from({ length: totalMonths }, (_, index) => {
+  const month = (startMonth + index) % 12;
+  if (month === 0) return "";
+  const label = new Intl.DateTimeFormat("en", {
+    month: "short",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(2000, month, 1)));
+  const year = String(Math.floor((startMonth + index) / 12)).slice(-2);
+  return `<span class="month-label${month % 3 === 0 ? " quarter-label" : ""}" style="left: ${(index / totalMonths) * 100}%">${label} ’${year}</span>`;
+}).join("");
 
 function roleDescription(role) {
   const dates = `${role.startLabel ?? formatMonth(role.start)} – ${role.end === timelineEnd ? "present" : (role.endLabel ?? formatMonth(role.end))}`;
@@ -150,8 +158,6 @@ document.querySelector("#app").innerHTML = `
     <p class="view-heading" id="view-heading" hidden></p>
     <div class="page-meta">
       <p class="view-summary"><span id="result-count" role="status" aria-live="polite" aria-atomic="true"></span><span class="meta-separator" aria-hidden="true">·</span><time datetime="${updatedAt}">Updated ${updatedLabel}</time></p>
-      <span class="meta-separator github-separator" aria-hidden="true">·</span>
-      <a href="https://github.com/elh/watn">GitHub</a>
     </div>
     <span id="share-status" class="sr-only" role="status"></span>
     <div class="copy-fallback" id="copy-fallback" hidden>
@@ -177,11 +183,13 @@ document.querySelector("#app").innerHTML = `
     <button class="text-button reset-filters" type="button" id="reset-filters" hidden>Clear all</button>
   </div>
   <div class="timeline-tools">
+    <button class="text-button reset-zoom" type="button" id="reset-zoom" hidden>Reset zoom</button>
     <button class="text-button jump-latest" type="button" id="jump-latest">Latest roles <span aria-hidden="true">→</span></button>
   </div>
-  <div class="timeline-scroll" role="region" aria-label="AI leaders’ career timeline" tabindex="0">
+  <span class="sr-only" id="timeline-keyboard-help">With the timeline focused, press + or - to zoom, 0 to reset, and arrow keys to scroll.</span>
+  <div class="timeline-scroll" role="region" aria-label="AI leaders’ career timeline" aria-describedby="timeline-keyboard-help" tabindex="0">
     <div class="timeline">
-      <div class="timeline-header"><div class="header-gutter"></div><div class="years">${tickMarkup(true)}</div></div>
+      <div class="timeline-header"><div class="header-gutter"></div><div class="years">${tickMarkup(true)}${monthTicks}</div></div>
       ${people.map(personMarkup).join("")}
     </div>
   </div>
@@ -216,7 +224,11 @@ const shareStatus = document.querySelector("#share-status");
 const copyFallback = document.querySelector("#copy-fallback");
 const jumpLatest = document.querySelector("#jump-latest");
 const timelineTools = document.querySelector(".timeline-tools");
+const resetZoom = document.querySelector("#reset-zoom");
+const yearLabels = [...document.querySelectorAll(".year-label")];
 let filters = readFilters(new URL(window.location.href));
+let visibleRange = readTimeRange(new URL(window.location.href));
+let rangeUrlTimer;
 let copyTimer;
 let shareRevision = 0;
 
@@ -233,7 +245,11 @@ function highlightRoles(predicate) {
 }
 
 function syncUrl(replace = false) {
-  const url = viewUrl(window.location.href, filters);
+  clearTimeout(rangeUrlTimer);
+  const url = timeRangeUrl(
+    viewUrl(window.location.href, filters),
+    visibleRange,
+  );
   if (url.href !== window.location.href)
     window.history[replace ? "replaceState" : "pushState"](null, "", url);
 }
@@ -263,7 +279,8 @@ function updateLatestButton() {
   const scrollable =
     timelineScroll.scrollWidth > timelineScroll.clientWidth + 2;
   jumpLatest.hidden = !scrollable || timelineScroll.hidden;
-  timelineTools.hidden = jumpLatest.hidden;
+  timelineTools.hidden =
+    timelineScroll.hidden || (jumpLatest.hidden && resetZoom.hidden);
   const atEnd =
     timelineScroll.scrollLeft + timelineScroll.clientWidth >=
     timelineScroll.scrollWidth - 2;
@@ -343,6 +360,8 @@ resetButton.addEventListener("click", resetFilters);
 document.querySelector("#empty-reset").addEventListener("click", resetFilters);
 window.addEventListener("popstate", () => {
   filters = readFilters(new URL(window.location.href));
+  visibleRange = readTimeRange(new URL(window.location.href));
+  navigation.setRange(visibleRange);
   applyFilters({ replace: true });
 });
 
@@ -383,7 +402,38 @@ for (const role of roleElements) {
 timelineScroll.addEventListener("scroll", updateLatestButton, {
   passive: true,
 });
-window.addEventListener("resize", updateLatestButton);
+const navigation = setupTimelineNavigation({
+  viewport: timelineScroll,
+  timeline,
+  onPanStart: clearHighlight,
+  initialRange: visibleRange,
+  totalMonths,
+  onChange: ({ trackWidth, range }) => {
+    if (range !== visibleRange) {
+      shareRevision += 1;
+      clearTimeout(copyTimer);
+      copyButton.querySelector("span").textContent = "Copy link";
+      shareStatus.textContent = "";
+      copyFallback.hidden = true;
+    }
+    visibleRange = range;
+    resetZoom.hidden = !range;
+    const monthWidth = trackWidth / totalMonths;
+    const yearStep = Math.max(1, Math.ceil(40 / (monthWidth * 12)));
+    yearLabels.forEach((label, index) => {
+      label.hidden = index % yearStep !== 0;
+    });
+    timeline.dataset.detail =
+      monthWidth >= 56 ? "months" : monthWidth >= 18 ? "quarters" : "years";
+    updateLatestButton();
+    clearTimeout(rangeUrlTimer);
+    rangeUrlTimer = setTimeout(() => syncUrl(true), 200);
+  },
+});
+resetZoom.addEventListener("click", () => {
+  navigation.reset();
+  timelineScroll.focus({ preventScroll: true });
+});
 jumpLatest.addEventListener("click", () => {
   timelineScroll.scrollTo({
     left: timelineScroll.scrollWidth,
@@ -394,7 +444,9 @@ jumpLatest.addEventListener("click", () => {
 });
 
 copyButton.addEventListener("click", async () => {
-  const url = viewUrl(window.location.href, filters).href;
+  visibleRange = navigation.getRange();
+  syncUrl(true);
+  const url = window.location.href;
   const revision = shareRevision;
   try {
     await navigator.clipboard.writeText(url);

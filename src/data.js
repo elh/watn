@@ -1,8 +1,9 @@
 export const timelineStart = "2010-01";
-export const timelineEnd = "2026-09";
+export const timelineEnd = "2026-10";
 
 // `end` is an exclusive month boundary used to size bars. Display labels preserve
 // the published transition month (or year when no reliable month is public).
+// Latest news review and source notes: docs/data-audit-2026-09-10.md.
 export const people = [
   {
     name: "Sam Altman",
@@ -445,7 +446,27 @@ export const people = [
         start: "2010-09",
         end: "2023-04",
       },
-      { company: "Google DeepMind", start: "2023-04", end: timelineEnd },
+      {
+        company: "Google DeepMind",
+        position: "CEO",
+        start: "2023-04",
+        end: "2026-08",
+        endLabel: "Aug 2026",
+      },
+      {
+        company: "Google DeepMind",
+        label: "Chair",
+        position: "Chair",
+        start: "2026-08",
+        end: timelineEnd,
+      },
+      {
+        company: "Alphabet",
+        position: "Chief Scientist",
+        start: "2026-08",
+        end: timelineEnd,
+        lane: 1,
+      },
     ],
   },
   {
@@ -777,6 +798,14 @@ export const people = [
         company: "Meta Superintelligence Labs",
         label: "MSL",
         start: "2025-10",
+        end: "2026-09",
+        endLabel: "Sep 2026",
+      },
+      {
+        company: "Anthropic",
+        label: "Anth",
+        start: "2026-09",
+        startLabel: "Sep 2026 (reported)",
         end: timelineEnd,
       },
     ],
@@ -1099,14 +1128,22 @@ export const people = [
       {
         company: "OpenAI",
         start: "2024-07",
-        end: "2026-01",
-        endLabel: "2026",
+        end: "2025-12",
+        endLabel: "Nov 2025",
       },
       {
         company: "Project Prometheus",
         label: "Prometheus",
-        start: "2026-01",
-        startLabel: "2026",
+        start: "2026-04",
+        startLabel: "by Apr 2026",
+        end: "2026-08",
+        endLabel: "by Aug 2026",
+      },
+      {
+        company: "River AI",
+        label: "River",
+        start: "2026-08",
+        startLabel: "by Aug 2026",
         end: timelineEnd,
       },
     ],
@@ -1172,6 +1209,7 @@ export const people = [
 
 export const companyColors = {
   Adept: "#806de0",
+  Alphabet: "#4f8df0",
   "AMI Labs": "#b65d84",
   Anthropic: "#c86742",
   "Apple AI": "#777c84",
